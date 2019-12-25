@@ -2,8 +2,7 @@ function Get-GitDirs {
     Get-ChildItem . -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse
 }
 
-function Get-RemoteState {
-    param ( [string]$branch )
+function Get-RemoteState([string] $branch) {
     $remoteState = ""
     $remoteBranch = "origin/$branch"
     $upstreamExists = (git branch -r | Select-String -Pattern "$remoteBranch$").Matches.Count
@@ -30,8 +29,7 @@ function Get-RemoteState {
     $remoteState
 }
 
-function Get-LocalState {
-    param ( [string]$branch )
+function Get-LocalState([string] $branch) {
     $localState = ""
     $untracked = (git status | Select-String -Pattern "Untracked").Matches.Count
     $newFiles = (git status | Select-String -Pattern "new file").Matches.Count
@@ -58,8 +56,7 @@ function Get-LocalState {
     $localState
 }
 
-function Get-GitStatus {
-    param ( [string]$dir )
+function Get-GitStatus([string] $dir) {
     Push-Location $dir
     $branch = git symbolic-ref HEAD | ForEach-Object { $_ -replace "^refs\/heads\/" }
     $remoteState = Get-RemoteState $branch
@@ -72,9 +69,34 @@ function Get-GitStatus {
     }
 }
 
-function Write-GitStatusList {
-    param ( [System.Collections.ArrayList]$gitStatus )
-    $gitStatusList | Format-Table    
+function Format-Color {
+	$lines = ($input | Out-String) -replace "`r", "" -split "`n"
+	foreach($line in $lines) {
+        if ($line.Length -gt 5) {
+            $color = ""
+            $state = $line.Substring($line.Length - 5, 5)
+            if ($state -like "   *") { 
+                $color = "Green"
+            }
+            if ($state -like "*[v^]*") { 
+                $color = "Yellow"
+            }
+            if ($state -like "*[?+M]*") { 
+                $color = "Red"
+            }
+            if($color) {
+                Write-Host -ForegroundColor $color $line
+            } else {
+                Write-Host $line
+            }
+        } else {
+            Write-Host $line
+        }
+	}
+}
+
+function Write-GitStatusList([System.Collections.ArrayList] $gitStatus) {
+    $gitStatusList | Format-Table | Format-Color  
 }
 
 $gitDirs = Get-GitDirs
