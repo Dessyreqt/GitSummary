@@ -10,4 +10,6 @@ if ($null -eq $profileContent -or $profileContent.Contains($aliasStr) -eq $false
 
 $aliasCmd = $aliasStr + " -Scope Global"
 
-Invoke-Expression $aliasCmd
+if ($null -eq (Get-Alias GitSummary)) {
+    Invoke-Expression $aliasCmd
+}
