@@ -4,10 +4,9 @@ $gitStatusList = New-Object System.Collections.ArrayList($null)
 foreach ($gitDir in $gitDirs) {
     $parentDir = $gitDir.parent.fullname
     Push-Location $parentDir
-    $name = Split-Path -Leaf (git remote get-url origin)
-    $branch = git branch --show-current
+    $branch = git symbolic-ref HEAD | %{$_ -replace "^refs\/heads\/" }
     $gitStatus = [PSCustomObject]@{ 
-        Name = $name
+        Directory = $parentDir
         Branch = $branch
     }
     $gitStatusList.Add($gitStatus) | Out-Null
