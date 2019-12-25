@@ -5,10 +5,10 @@ function Get-GitDirs {
 function Get-RemoteState {
     param ( [string]$branch )
     $remoteState = ""
-    [string]$upstream = git remote
-    if ($upstream.Length -gt 0) {
+    $remoteBranch = "origin/$branch"
+    $upstreamExists = (git branch -r | Select-String -Pattern "$remoteBranch$").Matches.Count
+    if ($upstreamExists -gt 0) {
         & git fetch | Out-Null
-        $remoteBranch = "$upstream/$branch"
         $unpulled = (git log --pretty=format:'%h' ..$remoteBranch | Measure-Object -Character).Characters
         $unpushed = (git log --pretty=format:'%h' "${remoteBranch}.." | Measure-Object -Character).Characters
 
