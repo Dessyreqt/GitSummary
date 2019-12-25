@@ -4,13 +4,13 @@ function Get-GitDirs {
 
 function Get-RemoteState {
     param ( [string]$branch )
-    & git fetch
     $remoteState = ""
     [string]$upstream = git remote
     if ($upstream.Length -gt 0) {
+        & git fetch
         $remoteBranch = "$upstream/$branch"
-        $unpulled = (& git log --pretty=format:'%h' ..$remoteBranch | Measure-Object -Character).Characters
-        $unpushed = (& git log --pretty=format:'%h' "${remoteBranch}.." | Measure-Object -Character).Characters
+        $unpulled = (git log --pretty=format:'%h' ..$remoteBranch | Measure-Object -Character).Characters
+        $unpushed = (git log --pretty=format:'%h' "${remoteBranch}.." | Measure-Object -Character).Characters
 
         if ($unpulled -ne 0) {
             $remoteState += "v"
@@ -30,16 +30,45 @@ function Get-RemoteState {
     $remoteState
 }
 
+function Get-LocalState {
+    param ( [string]$branch )
+    $localState = ""
+    $untracked = (git status | Select-String -Pattern "Untracked").Matches.Count
+    $newFiles = (git status | Select-String -Pattern "new file").Matches.Count
+    $modified = (git status | Select-String -Pattern "modified").Matches.Count
+
+    if ($untracked -ne 0) {
+        $localState += "?"
+    } else {
+        $localState += " "
+    }
+
+    if ($newFiles -ne 0) {
+        $localState += "+"
+    } else {
+        $localState += " "
+    }
+
+    if ($modified -ne 0) {
+        $localState += "M"
+    } else {
+        $localState += " "
+    }
+
+    $localState
+}
+
 function Get-GitStatus {
     param ( [string]$dir )
     Push-Location $dir
     $branch = git symbolic-ref HEAD | ForEach-Object { $_ -replace "^refs\/heads\/" }
     $remoteState = Get-RemoteState $branch
+    $localState = Get-LocalState $branch
     Pop-Location
     [PSCustomObject]@{ 
         Directory = $dir
         Branch = $branch
-        State = $remoteState
+        State = $localState + $remoteState
     }
 }
 
