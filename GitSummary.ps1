@@ -7,7 +7,7 @@ function Get-RemoteState {
     $remoteState = ""
     [string]$upstream = git remote
     if ($upstream.Length -gt 0) {
-        & git fetch
+        & git fetch | Out-Null
         $remoteBranch = "$upstream/$branch"
         $unpulled = (git log --pretty=format:'%h' ..$remoteBranch | Measure-Object -Character).Characters
         $unpushed = (git log --pretty=format:'%h' "${remoteBranch}.." | Measure-Object -Character).Characters
