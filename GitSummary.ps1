@@ -1,9 +1,14 @@
 param (
-    [Alias("l", "local")][switch] $localOnly = $false
+    [Alias("l", "local")][switch] $localOnly = $false,
+    [Alias("d", "deep")][switch] $deepSearch = $false
 )
 
 function Get-GitDirs {
-    Get-ChildItem . -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse
+    if ($deepSearch -eq $false) {
+        Get-ChildItem . -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse -Depth 2
+    } else {
+        Get-ChildItem . -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse
+    }
 }
 
 function Get-RemoteState([string] $branch) {
