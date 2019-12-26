@@ -1,3 +1,7 @@
+param (
+    [Alias("l", "local")][switch] $localOnly = $false
+)
+
 function Get-GitDirs {
     Get-ChildItem . -Attributes Directory+Hidden -ErrorAction SilentlyContinue -Filter ".git" -Recurse
 }
@@ -59,7 +63,11 @@ function Get-LocalState([string] $branch) {
 function Get-GitStatus([string] $dir) {
     Push-Location $dir
     $branch = git symbolic-ref HEAD | ForEach-Object { $_ -replace "^refs\/heads\/" }
-    $remoteState = Get-RemoteState $branch
+    if ($localOnly -eq $false) {
+        $remoteState = Get-RemoteState $branch
+    } else {
+        $remoteState = ""
+    }
     $localState = Get-LocalState $branch
     Pop-Location
     [PSCustomObject]@{ 
