@@ -11,7 +11,9 @@ function Get-RemoteState([string] $branch) {
     $remoteBranch = "origin/$branch"
     $upstreamExists = (git branch -r | Select-String -Pattern "$remoteBranch$").Matches.Count
     if ($upstreamExists -gt 0) {
-        & git fetch | Out-Null
+        if ($localOnly -eq $false) {
+            & git fetch | Out-Null
+        }
         $unpulled = (git log --pretty=format:'%h' ..$remoteBranch | Measure-Object -Character).Characters
         $unpushed = (git log --pretty=format:'%h' "${remoteBranch}.." | Measure-Object -Character).Characters
 
@@ -63,11 +65,7 @@ function Get-LocalState([string] $branch) {
 function Get-GitStatus([string] $dir) {
     Push-Location $dir
     $branch = git symbolic-ref HEAD | ForEach-Object { $_ -replace "^refs\/heads\/" }
-    if ($localOnly -eq $false) {
-        $remoteState = Get-RemoteState $branch
-    } else {
-        $remoteState = ""
-    }
+    $remoteState = Get-RemoteState $branch
     $localState = Get-LocalState $branch
     Pop-Location
     [PSCustomObject]@{ 
